@@ -98,29 +98,41 @@ function sideToPlayComment(fen) {
 -------------------------------------------------- */
 let filtersCache = null;
 
+async function buildFiltersCache() {
+  // Get distinct Themes strings (e.g. "fork pin middlegame") — much faster
+  // than json_each on 1M rows. Parse individual themes in JS instead.
+  const [themesResult, openingsResult] = await Promise.all([
+    db.execute({
+      sql: `SELECT DISTINCT Themes FROM puzzles WHERE Themes != ''`,
+      args: []
+    }),
+    db.execute({
+      sql: `SELECT DISTINCT OpeningTags FROM puzzles WHERE OpeningTags != '' ORDER BY OpeningTags`,
+      args: []
+    })
+  ]);
+
+  const themeSet = new Set();
+  themesResult.rows.forEach(r => {
+    String(r.Themes).split(' ').forEach(t => { if (t) themeSet.add(t); });
+  });
+
+  filtersCache = {
+    themes:   [...themeSet].sort(),
+    openings: openingsResult.rows.map(r => r.OpeningTags)
+  };
+}
+
+// Warm cache at startup so the first user doesn't wait
+buildFiltersCache()
+  .then(() => console.log(`✅ Filter cache ready (${filtersCache.themes.length} themes, ${filtersCache.openings.length} openings)`))
+  .catch(e  => console.error('Cache warm failed:', e.message));
+
 app.get('/api/filters', async (req, res) => {
-  if (filtersCache) return res.json(filtersCache);
-
   try {
-    const [themesResult, openingsResult] = await Promise.all([
-      db.execute({
-        sql: `SELECT DISTINCT TRIM(value) AS theme
-              FROM puzzles, json_each('["' || replace(Themes, ' ', '","') || '"]')
-              WHERE Themes != ''
-              ORDER BY theme`,
-        args: []
-      }),
-      db.execute({
-        sql: `SELECT DISTINCT OpeningTags FROM puzzles WHERE OpeningTags != '' ORDER BY OpeningTags`,
-        args: []
-      })
-    ]);
-
-    filtersCache = {
-      themes:   themesResult.rows.map(r => r.theme),
-      openings: openingsResult.rows.map(r => r.OpeningTags)
-    };
-
+    if (!filtersCache) await buildFiltersCache();
+    // CDN/browser cache for 24 h — Vercel edge serves subsequent requests instantly
+    res.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
     res.json(filtersCache);
   } catch (err) {
     res.status(500).json({ error: err.message });
