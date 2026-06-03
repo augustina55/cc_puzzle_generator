@@ -554,13 +554,13 @@ function setupThemeSearch() {
   const input = document.getElementById('themeInput');
   const list  = document.getElementById('themeList');
 
-  input.addEventListener('input', () => {
+  function renderThemeList() {
     const q = input.value.trim().toLowerCase();
+    const matches = q
+      ? THEMES.filter(t => t.toLowerCase().includes(q))
+      : THEMES;
     list.innerHTML = '';
-    if (!q) { list.hidden = true; return; }
-
-    const matches = THEMES.filter(t => t.toLowerCase().includes(q)).slice(0, 50);
-    matches.forEach(t => {
+    matches.slice(0, 100).forEach(t => {
       const d = document.createElement('div');
       d.className = 'dropdown-item';
       d.textContent = t;
@@ -568,13 +568,15 @@ function setupThemeSearch() {
         e.preventDefault();
         if (!selectedThemes.includes(t)) { selectedThemes.push(t); renderChips(); }
         input.value = '';
-        list.hidden = true;
+        renderThemeList();
       };
       list.appendChild(d);
     });
     list.hidden = !matches.length;
-  });
+  }
 
+  input.addEventListener('focus', renderThemeList);
+  input.addEventListener('input', renderThemeList);
   input.addEventListener('blur', () => { setTimeout(() => list.hidden = true, 150); });
 }
 
@@ -602,7 +604,7 @@ function setupOpeningSearch() {
   function renderList(filter = '') {
     list.innerHTML = '';
     const q = filter.toLowerCase();
-    const matches = (q ? OPENINGS.filter(o => o.toLowerCase().includes(q)) : OPENINGS).slice(0, 80);
+    const matches = (q ? OPENINGS.filter(o => o.toLowerCase().includes(q)) : OPENINGS).slice(0, 200);
     matches.forEach(o => {
       const d = document.createElement('div');
       d.className = 'dropdown-item';
