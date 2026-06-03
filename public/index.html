@@ -407,6 +407,25 @@ textarea#output::placeholder { color: var(--text-dim); font-family: inherit; }
 .empty-icon { font-size: 48px; opacity: .4; }
 .empty-text { font-size: 14px; text-align: center; }
 
+/* ── LOADER ── */
+.loader-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  width: 60px; height: 60px;
+}
+
+.loader-square { border-radius: 5px; }
+.s1 { background: #FACF47; animation: loader-pop 1.1s ease-in-out 0s infinite; }
+.s2 { background: #4D3F37; animation: loader-pop 1.1s ease-in-out .18s infinite; }
+.s3 { background: #4D3F37; animation: loader-pop 1.1s ease-in-out .36s infinite; }
+.s4 { background: #FACF47; animation: loader-pop 1.1s ease-in-out .54s infinite; }
+
+@keyframes loader-pop {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(.8); opacity: .5; }
+}
+
 /* ── TOAST ── */
 .toast {
   position: fixed;
@@ -445,6 +464,21 @@ textarea#output::placeholder { color: var(--text-dim); font-family: inherit; }
   </div>
 </header>
 
+<!-- LOADING SCREEN -->
+<div id="loader" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px;">
+  <div class="loader-board">
+    <div class="loader-square s1"></div>
+    <div class="loader-square s2"></div>
+    <div class="loader-square s3"></div>
+    <div class="loader-square s4"></div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:15px; font-weight:600; color:#262322; margin-bottom:6px;">Loading puzzles…</div>
+    <div style="font-size:13px; color:#888280;">Fetching all themes &amp; openings from 1M+ puzzles</div>
+  </div>
+</div>
+
+<div id="app">
 <main>
 
   <!-- FILTERS -->
@@ -527,6 +561,7 @@ textarea#output::placeholder { color: var(--text-dim); font-family: inherit; }
   </div>
 
 </main>
+</div><!-- #app -->
 
 <div class="toast" id="toast"></div>
 
@@ -537,6 +572,7 @@ let selectedOpening = '';
 
 /* ── INIT ── */
 async function loadFilters() {
+  showLoader(true);
   try {
     const res = await fetch('/api/filters');
     const data = await res.json();
@@ -546,7 +582,14 @@ async function loadFilters() {
     setupOpeningSearch();
   } catch(e) {
     showToast('Failed to load filters');
+  } finally {
+    showLoader(false);
   }
+}
+
+function showLoader(show) {
+  document.getElementById('loader').style.display = show ? 'flex' : 'none';
+  document.getElementById('app').style.display    = show ? 'none'  : 'block';
 }
 
 /* ── THEME SEARCH ── */

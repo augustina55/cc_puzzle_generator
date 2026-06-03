@@ -94,27 +94,34 @@ function sideToPlayComment(fen) {
 }
 
 /* -------------------------------------------------
-   FILTER API
+   FILTER API  (cached in memory — data never changes)
 -------------------------------------------------- */
+let filtersCache = null;
+
 app.get('/api/filters', async (req, res) => {
+  if (filtersCache) return res.json(filtersCache);
+
   try {
-    const themesResult = await db.execute({
-      sql: `SELECT DISTINCT TRIM(value) AS theme
-            FROM puzzles, json_each('["' || replace(Themes, ' ', '","') || '"]')
-            WHERE Themes != ''
-            ORDER BY theme`,
-      args: []
-    });
+    const [themesResult, openingsResult] = await Promise.all([
+      db.execute({
+        sql: `SELECT DISTINCT TRIM(value) AS theme
+              FROM puzzles, json_each('["' || replace(Themes, ' ', '","') || '"]')
+              WHERE Themes != ''
+              ORDER BY theme`,
+        args: []
+      }),
+      db.execute({
+        sql: `SELECT DISTINCT OpeningTags FROM puzzles WHERE OpeningTags != '' ORDER BY OpeningTags`,
+        args: []
+      })
+    ]);
 
-    const openingsResult = await db.execute({
-      sql: `SELECT DISTINCT OpeningTags FROM puzzles WHERE OpeningTags != '' ORDER BY OpeningTags`,
-      args: []
-    });
-
-    res.json({
-      themes: themesResult.rows.map(r => r.theme),
+    filtersCache = {
+      themes:   themesResult.rows.map(r => r.theme),
       openings: openingsResult.rows.map(r => r.OpeningTags)
-    });
+    };
+
+    res.json(filtersCache);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
