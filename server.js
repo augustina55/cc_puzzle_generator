@@ -1,12 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { createClient } = require('@libsql/client');
 const { Chess } = require('chess.js');
 
 const app = express();
 app.use(cors());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL,
