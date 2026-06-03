@@ -1,0 +1,15 @@
+[Event "Puzzle 1"]
+[Date "????.??.??"]
+[White "Easy Exercises"]
+[Black "Exercise 1"]
+[Result "*"]
+[Variant "Standard"]
+[PuzzleId "00001"]
+[StudyName "Custom PGN"]
+[ChapterName "Mate Exercise 1"]
+[ChapterURL "https://lichess.org/training/00001"]
+[Annotator "CircleChess"]
+[FEN "r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2b1/PqP3PP/7K w - - 0 1"]
+
+NaN. Rxe7 Qb1+ NaN. Nc1 Qxc1+ NaN. Qxc1
+

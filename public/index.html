@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CircleChess Puzzle PGN Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --primary:#2563eb;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg);
+  margin: 0;
+  padding: 40px 16px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  background: var(--card);
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+}
+
+h2 { margin-top: 0; }
+
+label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.field { margin-bottom: 18px; }
+
+input, button {
+  font-size: 14px;
+}
+
+.search, input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.dropdown { position: relative; }
+
+.list {
+  position: absolute;
+  background: white;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 8px;
+  margin-top: 4px;
+  z-index: 10;
+}
+
+.item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.item:hover { background:#f1f5f9; }
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chip {
+  background:#e0e7ff;
+  color:#1e3a8a;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+button.secondary { background:#16a34a; }
+
+textarea {
+  width:100%;
+  height:320px;
+  margin-top:16px;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-family: monospace;
+}
+
+@media (max-width:640px) {
+  .row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>♟️ CircleChess Puzzle PGN Generator</h2>
+
+<!-- THEMES -->
+<div class="field dropdown">
+  <label>Themes (type & select)</label>
+  <input id="themeInput" class="search" placeholder="fork, pin, mate…" />
+  <div id="themeList" class="list" hidden></div>
+  <div id="themeChips" class="chips"></div>
+</div>
+
+<!-- OPENING -->
+<div class="field dropdown">
+  <label>Opening</label>
+  <input id="openingInput" class="search" placeholder="Select opening" readonly />
+  <div id="openingList" class="list" hidden></div>
+</div>
+
+<div class="row">
+  <div class="field">
+    <label>Min Rating</label>
+    <input type="number" id="minRating" value="800">
+  </div>
+  <div class="field">
+    <label>Max Rating</label>
+    <input type="number" id="maxRating" value="2000">
+  </div>
+</div>
+
+<div class="field">
+  <label>No. of puzzles</label>
+  <input type="number" id="count" value="20" min="1" max="500">
+</div>
+
+<div class="actions">
+  <button onclick="generate()">Generate PGN</button>
+  <button class="secondary" onclick="download()">Download PGN</button>
+</div>
+
+<textarea id="output" placeholder="PGN output..."></textarea>
+
+</div>
+
+<script>
+let THEMES = [];
+let OPENINGS = [];
+let selectedThemes = [];
+let selectedOpening = '';
+
+async function loadFilters() {
+  const res = await fetch('/api/filters');
+  const data = await res.json();
+
+  THEMES = data.themes || [];
+  OPENINGS = data.openings || [];
+
+  initSearch();
+}
+
+/* ---------- SEARCH SETUP ---------- */
+function initSearch() {
+  setupThemeSearch();
+  setupOpeningSearch();
+}
+
+function setupThemeSearch() {
+  themeInput.addEventListener('input', () => {
+    const q = themeInput.value.toLowerCase();
+    themeList.innerHTML = '';
+    if (!q) { themeList.hidden = true; return; }
+
+    THEMES.filter(t => t.toLowerCase().includes(q))
+      .slice(0, 40)
+      .forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'item';
+        d.textContent = t;
+        d.onclick = () => {
+          if (!selectedThemes.includes(t)) {
+            selectedThemes.push(t);
+            renderThemeChips();
+          }
+          themeInput.value = '';
+          themeList.hidden = true;
+        };
+        themeList.appendChild(d);
+      });
+
+    themeList.hidden = !themeList.children.length;
+  });
+}
+
+function renderThemeChips() {
+  themeChips.innerHTML = '';
+  selectedThemes.forEach(t => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.textContent = t + ' ✕';
+    c.onclick = () => {
+      selectedThemes = selectedThemes.filter(x => x !== t);
+      renderThemeChips();
+    };
+    themeChips.appendChild(c);
+  });
+}
+
+function setupOpeningSearch() {
+  openingInput.addEventListener('focus', () => {
+    openingList.innerHTML = '';
+    OPENINGS.forEach(o => {
+      const d = document.createElement('div');
+      d.className = 'item';
+      d.textContent = o;
+      d.onclick = () => {
+        selectedOpening = o;
+        openingInput.value = o;
+        openingList.hidden = true;
+      };
+      openingList.appendChild(d);
+    });
+    openingList.hidden = false;
+  });
+
+  document.addEventListener('click', e => {
+    if (!openingInput.contains(e.target)) {
+      openingList.hidden = true;
+    }
+  });
+}
+
+/* ---------- ACTIONS ---------- */
+async function generate() {
+  const params = new URLSearchParams({
+    themes: JSON.stringify(selectedThemes),
+    openings: selectedOpening,
+    minRating: minRating.value,
+    maxRating: maxRating.value,
+    count: count.value
+  });
+
+  const res = await fetch('/api/pgn?' + params);
+  output.value = await res.text();
+}
+
+function download() {
+  const blob = new Blob([output.value], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'circlechess_puzzles.pgn';
+  a.click();
+}
+
+loadFilters();
+</script>
+</body>
+</html>
