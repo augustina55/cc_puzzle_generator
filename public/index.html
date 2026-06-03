@@ -10,26 +10,26 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:          #0e0b06;
-  --surface:     #181208;
-  --card:        #201810;
-  --card-raised: #271e12;
-  --border:      #3a2c18;
-  --border-hi:   #6b4e26;
-  --gold:        #e8b84b;
-  --gold-dim:    #b88a2e;
-  --gold-glow:   rgba(232,184,75,.12);
-  --gold-glow2:  rgba(232,184,75,.06);
-  --amber:       #c8841a;
-  --text:        #f2e0bb;
-  --text-muted:  #917050;
-  --text-dim:    #4e3a22;
-  --chip-bg:     rgba(232,184,75,.13);
-  --chip-border: rgba(232,184,75,.28);
-  --input-bg:    #120e07;
+  --bg:          #1c1917;
+  --surface:     #262322;
+  --card:        #2e2a28;
+  --card-raised: #363130;
+  --border:      #3d3835;
+  --border-hi:   #5a5250;
+  --gold:        #FACF47;
+  --gold-dim:    #D1AB41;
+  --gold-glow:   rgba(250,207,71,.12);
+  --gold-glow2:  rgba(250,207,71,.06);
+  --amber:       #E17846;
+  --text:        #FAF6EB;
+  --text-muted:  #888280;
+  --text-dim:    #554f4d;
+  --chip-bg:     rgba(250,207,71,.13);
+  --chip-border: rgba(250,207,71,.3);
+  --input-bg:    #1e1b19;
   --radius:      10px;
   --radius-lg:   16px;
-  --shadow:      0 8px 32px rgba(0,0,0,.5);
+  --shadow:      0 8px 32px rgba(0,0,0,.45);
 }
 
 html { scroll-behavior: smooth; }
@@ -63,7 +63,7 @@ header {
   display: flex; align-items: center; justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
-  box-shadow: 0 0 18px rgba(232,184,75,.3);
+  box-shadow: 0 0 18px rgba(250,207,71,.28);
 }
 
 .logo-text {
@@ -279,14 +279,15 @@ input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold), var(--amber));
-  color: #1a1000;
-  box-shadow: 0 4px 18px rgba(232,184,75,.25);
+  background: var(--gold);
+  color: #262322;
+  box-shadow: 0 4px 18px rgba(250,207,71,.22);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(232,184,75,.38);
+  background: #fdd84e;
+  box-shadow: 0 6px 24px rgba(250,207,71,.35);
 }
 
 .btn-primary:active { transform: translateY(0); }
@@ -313,8 +314,8 @@ input[type="number"].input::-webkit-inner-spin-button { -webkit-appearance: none
 /* ── SPINNER ── */
 .spinner {
   width: 16px; height: 16px;
-  border: 2px solid rgba(26,16,0,.3);
-  border-top-color: #1a1000;
+  border: 2px solid rgba(38,35,34,.3);
+  border-top-color: #262322;
   border-radius: 50%;
   animation: spin .7s linear infinite;
   display: none;
@@ -380,7 +381,7 @@ textarea#output {
   height: 340px;
   background: transparent;
   border: none;
-  color: #c8a86a;
+  color: #D1AB41;
   font-family: 'Menlo', 'Consolas', monospace;
   font-size: 12.5px;
   line-height: 24px;
